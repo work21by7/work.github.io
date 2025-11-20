@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Focus | Wave Edition</title>
+    <title>Daily Focus | Ultimate</title>
     
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="stylesheet" href="style.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -13,61 +14,104 @@
 <body>
 
     <div id="bg-image"></div>
-
     <div id="vanta-canvas"></div>
     
     <div id="toast">Streak Increased! 🔥</div>
-    <div id="toast-warn">Warning</div>
 
     <div class="app-container">
+        
         <div class="header">
-            <h1>Daily Focus</h1>
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                <span id="storage-status">Auto-Sync</span>
+            <div class="brand-container">
+                <img src="logo.jpg" alt="Logo" class="app-logo">
+                <h1>Daily Focus</h1>
             </div>
-        </div>
 
-        <div class="card glass-panel streak-card">
-            <div class="streak-info">
-                <div class="fire-icon-wrapper">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="fire-icon">
-                        <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
-                    </svg>
+            <div class="header-actions">
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    <span id="status-text">Sync</span>
                 </div>
-                <div>
-                    <div class="streak-number"><span id="streak-count">0</span> Day Streak</div>
-                    <div class="streak-sub">Complete <span class="req-text">REQ</span> tasks</div>
+                <button class="icon-btn" onclick="window.app.toggleSettings()" title="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="view-planner">
+            <div class="card glass-panel streak-card">
+                <div class="streak-info">
+                    <div class="fire-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="fire-icon"><path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <div>
+                        <div class="streak-number"><span id="streak-count">0</span> Day Streak</div>
+                        <div class="streak-sub">Complete <span class="req-text">REQ</span> tasks</div>
+                    </div>
                 </div>
             </div>
-            <button class="reset-btn" onclick="window.app.resetStreak()">Reset</button>
+
+            <div class="date-nav glass-panel">
+                <button class="nav-btn" onclick="window.app.changeDate(-1)">◀</button>
+                <div class="date-display">
+                    <input type="date" id="date-picker" class="date-input">
+                    <span class="weekday-display" id="weekday-display">TODAY</span>
+                </div>
+                <button class="nav-btn" onclick="window.app.changeDate(1)">▶</button>
+            </div>
+
+            <div class="progress-section glass-panel">
+                <div class="progress-text">
+                    <span id="progress-percent">Progress (0%)</span>
+                    <span id="progress-count">0/0 Tasks</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar"></div>
+                </div>
+            </div>
+
+            <div id="main-content-wrapper" class="glass-panel" style="padding: 1.5rem;">
+                <div id="main-content"></div>
+            </div>
         </div>
 
-        <div class="date-nav glass-panel">
-            <button class="nav-btn" onclick="window.app.changeDate(-1)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <div class="date-display">
-                <input type="date" id="date-picker" class="date-input">
-                <span class="weekday-display" id="weekday-display">TODAY</span>
+        <div id="view-settings" style="display: none;">
+            <button class="text-btn" onclick="window.app.toggleSettings()" style="margin-bottom: 1rem;">← Back to Planner</button>
+            
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h2>Visuals & Audio</h2>
+                <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">Dark Mode</span></div>
+                    <label class="switch"><input type="checkbox" id="toggle-theme" checked onchange="window.app.toggleTheme()"><span class="slider round"></span></label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">3D Background</span></div>
+                    <label class="switch"><input type="checkbox" id="toggle-anim" checked onchange="window.app.toggleAnimation()"><span class="slider round"></span></label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">Compact Mode</span></div>
+                    <label class="switch"><input type="checkbox" id="toggle-compact" onchange="window.app.toggleCompact()"><span class="slider round"></span></label>
+                </div>
+                 <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">Sound Effects</span></div>
+                    <label class="switch"><input type="checkbox" id="toggle-sound" checked onchange="window.app.toggleSound()"><span class="slider round"></span></label>
+                </div>
             </div>
-            <button class="nav-btn" onclick="window.app.changeDate(1)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-        </div>
 
-        <div class="progress-section glass-panel">
-            <div class="progress-text">
-                <span id="progress-percent">Progress (0%)</span>
-                <span id="progress-count">0/0 Tasks</span>
+            <div class="glass-panel" style="padding: 1.5rem; margin-top: 1rem;">
+                <h2>Data</h2>
+                <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">Export Data</span></div>
+                    <button class="action-btn" style="opacity:1; padding:8px 12px; border:1px solid var(--primary); color:var(--primary); border-radius:6px;" onclick="window.app.exportData()">Download</button>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">Reset Streak</span></div>
+                    <button class="action-btn" style="opacity:1; padding:8px 12px; border:1px solid var(--edit); color:var(--edit); border-radius:6px;" onclick="window.app.resetStreak()">Reset</button>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info"><span class="setting-title">Factory Reset</span></div>
+                    <button class="action-btn btn-delete" style="opacity:1; padding:8px 12px; border:1px solid var(--danger); border-radius:6px;" onclick="window.app.clearAllData()">Clear All</button>
+                </div>
             </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progress-bar"></div>
-            </div>
-        </div>
-
-        <div id="main-content-wrapper" class="glass-panel" style="padding: 1.5rem;">
-            <div id="main-content"></div>
         </div>
 
     </div>
