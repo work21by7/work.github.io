@@ -3,13 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Focus | Ultimate</title>
+    <title>Daily Focus | Final Fix</title>
     
     <link rel="icon" type="image/jpeg" href="logo.jpg">
-    <link rel="stylesheet" href="style.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #3b82f6;       
+            --primary-hover: #2563eb; 
+            --text-main: #ffffff;     
+            --text-muted: #e2e8f0;    
+            --danger: #f43f5e;        
+            --edit: #f59e0b;
+            
+            --glass-bg: rgba(15, 23, 42, 0.75); 
+            --glass-border: rgba(255, 255, 255, 0.2); 
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --bg-overlay: rgba(0,0,0,0);
+        }
+
+        /* LIGHT MODE */
+        body.light-mode {
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(59, 130, 246, 0.2);
+            --bg-overlay: rgba(226, 232, 240, 0.95); 
+        }
+
+        /* COMPACT MODE */
+        body.compact-mode .task-item { padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; }
+        body.compact-mode .section-header { margin-top: 0.5rem; margin-bottom: 0.5rem; padding: 0.25rem 0.75rem; }
+        body.compact-mode .task-title { font-size: 0.9rem; }
+        body.compact-mode .streak-card { padding: 0.75rem; }
+        body.compact-mode .card { margin-bottom: 1rem; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body { margin: 0; overflow-x: hidden; color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; background: #0f172a; transition: color 0.3s ease; }
+
+        /* LAYERS */
+        #bg-image { position: fixed; top: -5%; left: -5%; width: 110%; height: 110%; background-image: url('bg.jpg'); background-size: cover; background-position: center; z-index: -2; filter: brightness(0.85); transition: transform 0.1s ease-out; }
+        #vanta-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: auto; background-color: var(--bg-overlay); transition: background-color 0.3s ease, opacity 0.5s ease; }
+        
+        /* MAIN CONTAINER */
+        .app-container { position: relative; z-index: 10; width: 100%; max-width: 640px; padding: 2rem 1rem; }
+
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: 1rem; transition: background 0.3s ease; }
+
+        /* HEADER & LOGO */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .brand-container { display: flex; align-items: center; gap: 12px; }
+        .app-logo { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); transition: transform 0.3s ease; }
+        .app-logo:hover { transform: rotate(10deg) scale(1.1); }
+        .header h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        .status-badge { background: rgba(0,0,0,0.6); border: 1px solid var(--primary); padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+        .status-dot { width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%; }
+        
+        /* BUTTONS */
+        .icon-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); padding: 10px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .icon-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+        /* FIX: Prevent SVG from blocking click */
+        .icon-btn svg { pointer-events: none; }
+
+        .text-btn { background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; font-weight: bold; }
+        .text-btn:hover { color: var(--primary); }
+
+        /* SETTINGS & TOGGLES */
+        .hidden { display: none !important; } /* Utilities */
+        
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--glass-border); }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-title { font-weight: 600; display: block; color: var(--text-main); }
+        .setting-desc { font-size: 0.85rem; color: var(--text-muted); }
+        h2 { color: var(--text-main); margin-bottom: 1rem; font-size: 1.4rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+        
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* UI COMPONENTS */
+        .card { padding: 1.25rem; margin-bottom: 1.5rem; transition: transform 0.2s ease; }
+        .card:hover { transform: translateY(-2px); }
+        .streak-card { display: flex; justify-content: space-between; align-items: center; }
+        .streak-info { display: flex; align-items: center; gap: 1rem; }
+        .fire-icon-wrapper { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); padding: 0.75rem; border-radius: 50%; }
+        .fire-icon { color: #fff; width: 28px; height: 28px; }
+        .streak-number { font-weight: 800; font-size: 1.25rem; color: var(--text-main); }
+        .streak-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .req-text { color: var(--danger); font-weight: bold; }
+        
+        .reset-btn { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.75rem; cursor: pointer; }
+
+        .date-nav { padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .nav-btn { background: rgba(255,255,255,0.1); border: none; cursor: pointer; color: var(--text-main); padding: 0.6rem; border-radius: 50%; transition: 0.2s; }
+        .nav-btn:hover { background-color: var(--primary); color: white; }
+        .date-display input { border: none; background: transparent; font-size: 1.25rem; font-weight: 800; color: var(--text-main); text-align: center; cursor: pointer; outline: none; }
+        .weekday-display { font-size: 0.8rem; text-transform: uppercase; color: var(--primary); font-weight: 700; display: block; text-align: center; margin-top: 4px; }
+        
+        .progress-section { padding: 1.25rem; margin-bottom: 2.5rem; }
+        .progress-text { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.75rem; }
+        .progress-track { width: 100%; height: 10px; background-color: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.5s; }
+
+        /* TASKS */
+        .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; margin-top: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+        .task-list { list-style: none; margin-bottom: 2rem; }
+        .task-item { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+        .task-item:hover { transform: scale(1.01); background: rgba(255, 255, 255, 0.1); border-color: var(--primary); }
+        .task-item.done { opacity: 0.5; } .task-item.done .task-title { text-decoration: line-through; color: var(--text-muted); }
+        .task-left { display: flex; align-items: center; gap: 1rem; flex: 1; }
+        .task-content { display: flex; flex-direction: column; }
+        .task-title { font-weight: 600; font-size: 1rem; color: var(--text-main); }
+        .task-right { display: flex; align-items: center; gap: 8px; }
+        .action-btn { background: none; border: none; cursor: pointer; padding: 6px; transition: transform 0.2s; opacity: 0.7; color: var(--text-main); border-radius: 4px;}
+        .action-btn:hover { opacity: 1; transform: scale(1.2); background: rgba(255,255,255,0.1); }
+        .btn-edit { color: var(--edit); }
+        .btn-delete { color: var(--danger); }
+
+        .badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 0.35rem; font-weight: 600; }
+        .badge-req { color: #fca5a5; background: rgba(248, 113, 113, 0.2); border: 1px solid #f87171; }
+        .badge-time { background-color: rgba(255,255,255,0.1); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 4px;}
+        .priority-High { color: #fca5a5; background: rgba(127, 29, 29, 0.4); border: 1px solid #f87171; }
+        .priority-Medium { color: #fdba74; background: rgba(124, 45, 18, 0.4); border: 1px solid #fb923c; }
+        .priority-Low { color: #93c5fd; background: rgba(30, 58, 138, 0.4); border: 1px solid #60a5fa; }
+
+        .add-trigger-btn { width: 100%; padding: 1rem; border: 2px dashed rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; margin-bottom: 2.5rem; }
+        .add-trigger-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: #fff; }
+        .add-form { background: var(--glass-bg); padding: 1.25rem; border-radius: 1rem; margin-bottom: 1rem; display: none; border: 1px solid var(--glass-border); animation: slideDown 0.3s ease; }
+        .form-input { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--text-main); }
+        
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #10b981; color: white; padding: 10px 20px; border-radius: 50px; font-weight: bold; transition: transform 0.3s ease; z-index: 100; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
@@ -22,7 +158,7 @@
         
         <div class="header">
             <div class="brand-container">
-                <img src="logo.jpg" alt="Logo" class="app-logo">
+                <img src="logo.jpg" alt="Logo" class="app-logo" onerror="this.style.display='none'"> 
                 <h1>Daily Focus</h1>
             </div>
 
@@ -48,7 +184,7 @@
                         <div class="streak-sub">Complete <span class="req-text">REQ</span> tasks</div>
                     </div>
                 </div>
-            </div>
+                </div>
 
             <div class="date-nav glass-panel">
                 <button class="nav-btn" onclick="window.app.changeDate(-1)">◀</button>
@@ -74,18 +210,18 @@
             </div>
         </div>
 
-        <div id="view-settings" style="display: none;">
-            <button class="text-btn" onclick="window.app.toggleSettings()" style="margin-bottom: 1rem;">← Back to Planner</button>
+        <div id="view-settings" class="hidden">
+            <button class="text-btn" onclick="window.app.toggleSettings()" style="margin-bottom: 1rem;">← Back</button>
             
             <div class="glass-panel" style="padding: 1.5rem;">
                 <h2>Visuals & Audio</h2>
                 <div class="setting-row">
                     <div class="setting-info"><span class="setting-title">Dark Mode</span></div>
-                    <label class="switch"><input type="checkbox" id="toggle-theme" checked onchange="window.app.toggleTheme()"><span class="slider round"></span></label>
+                    <label class="switch"><input type="checkbox" id="toggle-theme" onchange="window.app.toggleTheme()"><span class="slider round"></span></label>
                 </div>
                 <div class="setting-row">
                     <div class="setting-info"><span class="setting-title">3D Background</span></div>
-                    <label class="switch"><input type="checkbox" id="toggle-anim" checked onchange="window.app.toggleAnimation()"><span class="slider round"></span></label>
+                    <label class="switch"><input type="checkbox" id="toggle-anim" onchange="window.app.toggleAnimation()"><span class="slider round"></span></label>
                 </div>
                 <div class="setting-row">
                     <div class="setting-info"><span class="setting-title">Compact Mode</span></div>
@@ -93,14 +229,14 @@
                 </div>
                  <div class="setting-row">
                     <div class="setting-info"><span class="setting-title">Sound Effects</span></div>
-                    <label class="switch"><input type="checkbox" id="toggle-sound" checked onchange="window.app.toggleSound()"><span class="slider round"></span></label>
+                    <label class="switch"><input type="checkbox" id="toggle-sound" onchange="window.app.toggleSound()"><span class="slider round"></span></label>
                 </div>
             </div>
 
             <div class="glass-panel" style="padding: 1.5rem; margin-top: 1rem;">
                 <h2>Data</h2>
                 <div class="setting-row">
-                    <div class="setting-info"><span class="setting-title">Export Data</span></div>
+                    <div class="setting-info"><span class="setting-title">Export Backup</span></div>
                     <button class="action-btn" style="opacity:1; padding:8px 12px; border:1px solid var(--primary); color:var(--primary); border-radius:6px;" onclick="window.app.exportData()">Download</button>
                 </div>
                 <div class="setting-row">
@@ -116,6 +252,322 @@
 
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // 1. Init
+        document.addEventListener("DOMContentLoaded", function() {
+            try {
+                VANTA.NET({
+                    el: "#vanta-canvas",
+                    mouseControls: true, touchControls: true, gyroControls: false,
+                    minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00,
+                    backgroundAlpha: 0.0, color: 0xffffff, points: 11.00, maxDistance: 22.00, spacing: 18.00, showDots: true
+                });
+            } catch (e) { console.log("Vanta JS offline"); }
+
+            const bg = document.getElementById('bg-image');
+            if(bg) {
+                document.addEventListener('mousemove', (e) => {
+                    const x = (window.innerWidth - e.pageX) / 25;
+                    const y = (window.innerHeight - e.pageY) / 25;
+                    bg.style.transform = `translate(${x}px, ${y}px)`;
+                });
+            }
+        });
+
+        function getLocalISOString() {
+            const d = new Date();
+            const offset = d.getTimezoneOffset() * 60000;
+            return new Date(d.getTime() - offset).toISOString().split('T')[0];
+        }
+
+        // 2. App Class
+        class StudyPlanner {
+            constructor() {
+                const defaultPrefs = { darkMode: true, animation: true, sound: true, compact: false };
+                this.state = {
+                    currentDate: getLocalISOString(),
+                    streak: JSON.parse(localStorage.getItem('streak')) || { count: 0, lastDate: null },
+                    prefs: JSON.parse(localStorage.getItem('prefs')) || defaultPrefs
+                };
+                
+                this.parts = [
+                    { name: 'Morning', icon: '#fbbf24', path: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>' },
+                    { name: 'Afternoon', icon: '#60a5fa', path: '<path d="M12 10V2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M12 22v-2"/><path d="m8 12 4 4 4-4"/>' },
+                    { name: 'Evening', icon: '#818cf8', path: '<path d="M12 3a6 6 0 0 0 9 9 9 0 1 1-9-9Z"/>' }
+                ];
+                this.init();
+            }
+
+            init() {
+                this.applyPrefs();
+                this.render();
+                const picker = document.getElementById('date-picker');
+                if(picker) {
+                    picker.addEventListener('change', (e) => {
+                        this.state.currentDate = e.target.value;
+                        this.render();
+                    });
+                }
+            }
+
+            toggleSettings() {
+                const planner = document.getElementById('view-planner');
+                const settings = document.getElementById('view-settings');
+                if (planner.style.display === 'none') {
+                    planner.style.display = 'block';
+                    settings.style.display = 'none';
+                } else {
+                    planner.style.display = 'none';
+                    settings.style.display = 'block';
+                }
+            }
+
+            applyPrefs() {
+                if (!this.state.prefs.darkMode) {
+                    document.body.classList.add('light-mode');
+                    document.getElementById('toggle-theme').checked = false;
+                } else {
+                    document.body.classList.remove('light-mode');
+                    document.getElementById('toggle-theme').checked = true;
+                }
+                const vanta = document.getElementById('vanta-canvas');
+                if (vanta) vanta.style.opacity = this.state.prefs.animation ? '1' : '0';
+                document.getElementById('toggle-anim').checked = this.state.prefs.animation;
+
+                if (this.state.prefs.compact) {
+                    document.body.classList.add('compact-mode');
+                    document.getElementById('toggle-compact').checked = true;
+                } else {
+                    document.body.classList.remove('compact-mode');
+                    document.getElementById('toggle-compact').checked = false;
+                }
+                document.getElementById('toggle-sound').checked = this.state.prefs.sound;
+            }
+
+            savePrefs() { localStorage.setItem('prefs', JSON.stringify(this.state.prefs)); }
+            toggleTheme() { this.state.prefs.darkMode = !this.state.prefs.darkMode; this.savePrefs(); this.applyPrefs(); }
+            toggleAnimation() { this.state.prefs.animation = !this.state.prefs.animation; this.savePrefs(); this.applyPrefs(); }
+            toggleCompact() { this.state.prefs.compact = !this.state.prefs.compact; this.savePrefs(); this.applyPrefs(); }
+            toggleSound() { this.state.prefs.sound = !this.state.prefs.sound; this.savePrefs(); this.applyPrefs(); }
+
+            clearAllData() { if(confirm("Are you sure? This wipes everything.")) { localStorage.clear(); location.reload(); } }
+
+            exportData() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localStorage));
+                const node = document.createElement('a');
+                node.setAttribute("href", dataStr);
+                node.setAttribute("download", "daily_focus_backup.json");
+                document.body.appendChild(node);
+                node.click();
+                node.remove();
+            }
+
+            changeDate(offset) {
+                const current = new Date(this.state.currentDate + "T00:00:00");
+                current.setDate(current.getDate() + offset);
+                const year = current.getFullYear();
+                const month = String(current.getMonth() + 1).padStart(2, '0');
+                const day = String(current.getDate()).padStart(2, '0');
+                this.state.currentDate = `${year}-${month}-${day}`;
+                this.render();
+            }
+
+            getTasks(date) { return JSON.parse(localStorage.getItem(`tasks_${date}`)) || []; }
+            saveTasks(date, tasks) {
+                localStorage.setItem(`tasks_${date}`, JSON.stringify(tasks));
+                this.updateProgress(tasks);
+                this.checkStreak(date, tasks);
+            }
+
+            addTask(part, formId) {
+                const title = document.getElementById(`title-${formId}`).value;
+                if (!title) return alert("Title is required");
+                const time = document.getElementById(`time-${formId}`).value;
+                const priority = document.getElementById(`prio-${formId}`).value;
+                const required = document.getElementById(`req-${formId}`).checked;
+
+                const tasks = this.getTasks(this.state.currentDate);
+                tasks.push({ id: Date.now(), title, part, time, priority, required, done: false });
+                this.saveTasks(this.state.currentDate, tasks);
+                this.render();
+            }
+
+            toggleTask(id) {
+                const tasks = this.getTasks(this.state.currentDate);
+                const task = tasks.find(t => t.id == id);
+                if (task) {
+                    task.done = !task.done;
+                    if(task.done && this.state.prefs.sound) this.playSound();
+                    this.saveTasks(this.state.currentDate, tasks);
+                    this.render();
+                }
+            }
+
+            deleteTask(id, confirmDel = true) {
+                if(confirmDel && !confirm("Delete this task?")) return;
+                let tasks = this.getTasks(this.state.currentDate);
+                tasks = tasks.filter(t => t.id != id);
+                this.saveTasks(this.state.currentDate, tasks);
+                this.render();
+            }
+
+            editTask(id) {
+                const tasks = this.getTasks(this.state.currentDate);
+                const task = tasks.find(t => t.id == id);
+                if (!task) return;
+                const formId = `form-${task.part}`;
+                
+                this.deleteTask(id, false);
+                setTimeout(() => {
+                    const tInput = document.getElementById(`title-${formId}`);
+                    if(tInput) {
+                        tInput.value = task.title;
+                        document.getElementById(`time-${formId}`).value = task.time;
+                        document.getElementById(`prio-${formId}`).value = task.priority;
+                        document.getElementById(`req-${formId}`).checked = task.required;
+                        this.toggleForm(formId);
+                        this.showToast("Task ready to edit");
+                    }
+                }, 50);
+            }
+
+            toggleForm(id) {
+                const form = document.getElementById(id);
+                if(form) form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            }
+
+            showToast(msg) {
+                const t = document.getElementById('toast');
+                t.innerText = msg;
+                t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), 3000);
+            }
+
+            playSound() {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const playTone = (freq, startTime, duration, type = 'triangle') => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                };
+                const now = ctx.currentTime;
+                playTone(523.25, now, 0.6);       
+                playTone(659.25, now + 0.1, 0.6); 
+                playTone(783.99, now + 0.2, 0.6); 
+                playTone(1046.50, now + 0.3, 0.8, 'square'); 
+            }
+
+            checkStreak(date, tasks) {
+                const requiredTasks = tasks.filter(t => t.required);
+                const todayStr = getLocalISOString();
+                if (date !== todayStr) return;
+                if (requiredTasks.length === 0) return;
+                const allDone = requiredTasks.every(t => t.done);
+
+                if (allDone) {
+                    if (this.state.streak.lastDate === todayStr) return;
+                    const yesterdayObj = new Date();
+                    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+                    const offset = yesterdayObj.getTimezoneOffset() * 60000;
+                    const yesterdayStr = new Date(yesterdayObj.getTime() - offset).toISOString().split('T')[0];
+
+                    if (this.state.streak.lastDate === yesterdayStr) {
+                        this.state.streak.count++;
+                    } else {
+                        this.state.streak.count = 1;
+                    }
+                    this.state.streak.lastDate = todayStr;
+                    localStorage.setItem('streak', JSON.stringify(this.state.streak));
+                    if(this.state.prefs.sound) this.playSound();
+                    this.showToast("Streak Increased! 🔥");
+                    this.renderStreak();
+                }
+            }
+
+            resetStreak() {
+                if(confirm('Reset streak to 0?')) {
+                    this.state.streak = { count: 0, lastDate: null };
+                    localStorage.setItem('streak', JSON.stringify(this.state.streak));
+                    this.renderStreak();
+                }
+            }
+
+            render() {
+                const datePicker = document.getElementById('date-picker');
+                if(datePicker) datePicker.value = this.state.currentDate;
+
+                const [y, m, d] = this.state.currentDate.split('-').map(Number);
+                const userDate = new Date(y, m - 1, d);
+                const weekdayElem = document.getElementById('weekday-display');
+                if(weekdayElem) weekdayElem.innerText = userDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                const tasks = this.getTasks(this.state.currentDate);
+                const container = document.getElementById('main-content');
+                if(container) {
+                    container.innerHTML = '';
+                    this.parts.forEach(part => {
+                        const partTasks = tasks.filter(t => t.part === part.name);
+                        const formId = `form-${part.name}`;
+                        let tasksHtml = partTasks.map(task => `
+                            <li class="task-item ${task.done ? 'done' : ''}">
+                                <div class="task-left">
+                                    <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''} onchange="window.app.toggleTask(${task.id})">
+                                    <div class="task-content">
+                                        <span class="task-title">${task.title}</span>
+                                        <div style="display:flex; gap:5px; margin-top:2px;">
+                                            ${task.required ? '<span class="badge badge-req">REQ</span>' : ''}
+                                            ${task.time ? `<span class="badge badge-time">${task.time}</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="task-right">
+                                    <span class="badge priority-${task.priority}">${task.priority}</span>
+                                    <button class="action-btn btn-edit" onclick="window.app.editTask(${task.id})">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
+                                    <button class="action-btn btn-delete" onclick="window.app.deleteTask(${task.id})">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                </div>
+                            </li>
+                        `).join('');
+
+                        const sectionHtml = `
+                            <div class="section-header">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${part.icon}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${part.path}</svg>
+                                <span class="section-title">${part.name}</span>
+                            </div>
+                            <ul class="task-list">${tasksHtml}</ul>
+                            <div class="add-form" id="${formId}">
+                                <div style="display:flex; gap:8px; margin-bottom:8px"><input type="text" id="title-${formId}" class="form-input" style="flex:1; padding:8px; border-radius:6px" placeholder="Task name..."></div>
+                                <div style="display:flex; gap:8px; margin-bottom:8px">
+                                    <input type="time" id="time-${formId}" class="form-input" style="padding:6px; border-radius:6px">
+                                    <select id="prio-${formId}" class="form-input" style="padding:6px; border-radius:6px; flex:1"><option value="Medium">Medium Prio</option><option value="High">High Prio</option><option value="Low">Low Prio</option></select>
+                                </div>
+                                <div style="display:flex; align-items:center; justify-content:space-between">
+                                    <div style="display:flex; align-items:center; gap:5px"><input type="checkbox" id="req-${formId}" style="width:16px; height:16px"> <label for="req-${formId}" style="font-size:0.85rem; color:var(--text-main)">Required</label></div>
+                                    <div style="display:flex; gap:5px"><button type="button" onclick="window.app.toggleForm('${formId}')" style="padding:6px 12px; background:none; border:1px solid #ccc; border-radius:6px; cursor:pointer; color:var(--text-main)">Cancel</button><button type="button" onclick="window.app.addTask('${part.name}', '${formId}')" style="padding:6px 12px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer">Save</button></div>
+                                </div>
+                            </div>
+                            <button class="add-trigger-btn" onclick="window.app.toggleForm('${formId}')"><span>+</span> Add Task</button>
+                        `;
+                        container.innerHTML += sectionHtml;
+                    });
+                }
+                this.updateProgress(tasks);
+                this.renderStreak();
+            }
+        }
+
+        // Attach to window so HTML buttons work
+        window.app = new StudyPlanner();
+    </script>
 </body>
 </html>
